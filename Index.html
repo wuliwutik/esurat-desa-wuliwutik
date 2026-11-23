@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E-Surat Desa Wuliwutik - Kec. Nita</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #F4F6FA;
+      color: #1E293B;
+    }
+    .sidebar-gradient {
+      background: linear-gradient(180deg, #5B6AE0 0%, #8658D8 45%, #D9658F 85%, #F26A7E 100%);
+    }
+    .kpi-pink { background: linear-gradient(135deg, #FF5E7E 0%, #FF477E 100%); }
+    .kpi-purple { background: linear-gradient(135deg, #A044FF 0%, #8A2BE2 100%); }
+    .kpi-lavender { background: linear-gradient(135deg, #98A8F8 0%, #8294F8 100%); }
+    .kpi-blue { background: linear-gradient(135deg, #3A86FF 0%, #2563EB 100%); }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+  </style>
+</head>
+<body class="antialiased selection:bg-indigo-100 selection:text-indigo-700">
+
+  <!-- LOADING OVERLAY -->
+  <div id="loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
+    <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    <p id="loader-text" class="mt-3 text-sm font-semibold text-slate-600">Menghubungkan ke Google Drive & Sheets...</p>
+  </div>
+
+  <!-- ================= HALAMAN LOGIN KATA SANDI ================= -->
+  <section id="login-screen" class="min-h-screen flex items-center justify-center p-4 sidebar-gradient">
+    <div class="bg-white/95 backdrop-blur-md rounded-3xl max-w-md w-full p-7 shadow-2xl border border-white/50">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
+          <i data-lucide="shield-lock" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-xl text-slate-900 leading-tight">E-Surat Desa Wuliwutik</h1>
+          <p class="text-xs text-slate-500 font-medium">Kecamatan Nita • Masuk dengan Kata Sandi</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Pilih Jabatan Perangkat Desa</label>
+          <select id="login-jabatan" class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2.5 font-medium text-slate-800 focus:outline-none focus:border-indigo-500">
+            <option value="">Memuat daftar jabatan...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Atau Masukkan Email Resmi</label>
+          <input type="text" id="login-identifier" placeholder="Contoh: kades.wuliwutik@gmail.com" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Kata Sandi</label>
+          <div class="relative">
+            <input type="password" id="login-password" required placeholder="Masukkan kata sandi akun" class="w-full border border-slate-200 rounded-xl pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-indigo-500">
+            <button type="button" onclick="togglePasswordVisibility('login-password', 'eye-login')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i id="eye-login" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <p id="login-error" class="text-xs text-rose-600 font-semibold hidden"></p>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>Login</span>
+        </button>
+      </form>
+
+      <div class="mt-5 pt-4 border-t border-slate-100 text-[11px] text-slate-400 text-center">
+        Pemerintah Desa Wuliwutik • Kecamatan Nita, Kab. Sikka
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= APLIKASI UTAMA ================= -->
+  <div id="app-shell" class="hidden min-h-screen">
+    <div class="flex min-h-screen">
+      <!-- SIDEBAR KIRI -->
+      <aside id="sidebar" class="sidebar-gradient w-64 text-white flex flex-col justify-between p-5 fixed inset-y-0 left-0 z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-xl">
+        <div>
+          <div class="flex items-center gap-3 px-2 mb-8">
+            <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <i data-lucide="mail" class="w-5 h-5 text-white"></i>
+            </div>
+            <div>
+              <h1 class="font-bold text-lg leading-tight tracking-tight">Desa Wuliwutik</h1>
+              <p class="text-[11px] text-white/80 font-medium">Kecamatan Nita</p>
+            </div>
+          </div>
+
+          <nav class="space-y-1.5 text-sm font-medium">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-slate-800 font-semibold shadow-sm transition">
+              <i data-lucide="home" class="w-4 h-4"></i>
+              <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('masuk')" id="nav-masuk" class="nav-item w-full flex items-center justify-between px-4 py-3 rounded-2xl text-white/90 hover:bg-white/15 transition">
+              <div class="flex items-center gap-3">
+                <i data-lucide="inbox" class="w-4 h-4"></i>
+                <span>Surat Masuk</span>
+              </div>
+              <span id="badge-masuk" class="bg-white text-indigo-600 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+            </button>
+            <button onclick="switchTab('keluar')" id="nav-keluar" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/90 hover:bg-white/15 transition">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Surat Keluar</span>
+            </button>
+            <button onclick="switchTab('disposisi')" id="nav-disposisi" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/90 hover:bg-white/15 transition">
+              <i data-lucide="git-branch" class="w-4 h-4"></i>
+              <span>Disposisi</span>
+            </button>
+            <button onclick="switchTab('verifikasi')" id="nav-verifikasi" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/90 hover:bg-white/15 transition">
+              <i data-lucide="qr-code" class="w-4 h-4"></i>
+              <span>Verifikasi TTE</span>
+            </button>
+            <button onclick="switchTab('laporan')" id="nav-laporan" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/90 hover:bg-white/15 transition">
+              <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+              <span>Laporan</span>
+            </button>
+            <button onclick="switchTab('pengguna')" id="nav-pengguna" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/90 hover:bg-white/15 transition">
+              <i data-lucide="users" class="w-4 h-4"></i>
+              <span>Pengguna</span>
+            </button>
+            <button onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/90 hover:bg-white/15 transition">
+              <i data-lucide="sliders" class="w-4 h-4"></i>
+              <span>Pengaturan</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="space-y-3 mt-6">
+          <div class="glass-card rounded-2xl p-4 text-center">
+            <p class="font-bold text-xs">Pasang Aplikasi</p>
+            <p class="text-[11px] text-white/85 mt-1 leading-relaxed">Instal E-Surat Desa Wuliwutik ke layar utama.</p>
+            <button onclick="alert('Untuk menginstal: Klik menu browser (⋮) lalu pilih Tambahkan ke Layar Utama.')" class="mt-3 w-full bg-white text-slate-800 font-bold text-xs py-2 rounded-xl shadow hover:bg-slate-50 transition">
+              Instal
+            </button>
+          </div>
+
+          <button onclick="logoutUser()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-white/10 rounded-xl transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Keluar</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="flex-1 md:ml-64 p-5 md:p-8 max-w-7xl mx-auto w-full">
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
+          <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="md:hidden p-2 bg-white rounded-xl shadow-sm text-slate-700">
+              <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div>
+              <h2 id="greeting-text" class="text-2xl md:text-[26px] font-extrabold text-slate-900 tracking-tight">Selamat siang, Perangkat Desa!</h2>
+              <p id="greeting-sub" class="text-sm text-slate-500 mt-0.5">Anda memiliki <strong class="text-slate-700">0 surat masuk baru</strong> dan <strong class="text-slate-700">0 tugas menunggu</strong>.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 self-end sm:self-auto">
+            <button onclick="openModalSurat()" class="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm px-5 py-2.5 rounded-full shadow-sm border border-slate-200/80 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Surat</span>
+            </button>
+            <button onclick="logoutUser()" id="user-avatar" title="Keluar dari Akun" class="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold text-sm flex items-center justify-center shadow-md hover:ring-4 hover:ring-indigo-100 transition">
+              W
+            </button>
+          </div>
+        </header>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-section space-y-7">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div onclick="switchTab('masuk')" class="kpi-pink rounded-3xl p-5 text-white shadow-lg shadow-rose-200/60 cursor-pointer hover:-translate-y-1 transition">
+              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><i data-lucide="inbox" class="w-5 h-5"></i></div>
+              <div id="kpi-masuk" class="text-3xl font-extrabold">0</div>
+              <div class="text-xs font-medium text-white/90 mt-1">Total Surat Masuk</div>
+            </div>
+            <div onclick="switchTab('keluar')" class="kpi-purple rounded-3xl p-5 text-white shadow-lg shadow-purple-200/60 cursor-pointer hover:-translate-y-1 transition">
+              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><i data-lucide="send" class="w-5 h-5"></i></div>
+              <div id="kpi-keluar" class="text-3xl font-extrabold">0</div>
+              <div class="text-xs font-medium text-white/90 mt-1">Total Surat Keluar</div>
+            </div>
+            <div onclick="switchTab('disposisi')" class="kpi-lavender rounded-3xl p-5 text-white shadow-lg shadow-indigo-200/60 cursor-pointer hover:-translate-y-1 transition">
+              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><i data-lucide="paperclip" class="w-5 h-5"></i></div>
+              <div id="kpi-belum" class="text-3xl font-extrabold">0</div>
+              <div class="text-xs font-medium text-white/90 mt-1">Belum Diproses / TTE</div>
+            </div>
+            <div onclick="switchTab('laporan')" class="kpi-blue rounded-3xl p-5 text-white shadow-lg shadow-blue-200/60 cursor-pointer hover:-translate-y-1 transition">
+              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></div>
+              <div id="kpi-bulan" class="text-3xl font-extrabold">0</div>
+              <div class="text-xs font-medium text-white/90 mt-1">Surat Bulan Ini</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-800">Surat Terbaru</h3>
+                <span class="text-xs text-slate-400 font-medium">Tersinkronisasi Google Drive</span>
+              </div>
+              <div id="recent-letters-list" class="space-y-3"></div>
+            </div>
+
+            <div class="lg:col-span-5 space-y-6">
+              <div>
+                <h3 class="text-base font-bold text-slate-800 mb-3">Tugas untuk Saya</h3>
+                <div id="my-tasks-container" class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 min-h-[120px] flex flex-col justify-center"></div>
+              </div>
+
+              <div>
+                <h3 class="text-base font-bold text-slate-800 mb-3">Aktivitas 6 Bulan</h3>
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+                  <div class="h-52"><canvas id="activityChart"></canvas></div>
+                  <div class="flex items-center gap-5 mt-3 pt-2 border-t border-slate-100 text-xs font-semibold text-slate-600">
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#1E1E2D]"></span><span>Masuk</span></div>
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#F45B7A]"></span><span>Keluar</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: SURAT MASUK -->
+        <section id="tab-masuk" class="tab-section hidden space-y-4">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 class="text-lg font-bold text-slate-800">Daftar Surat Masuk</h3>
+                <p class="text-xs text-slate-500">Arsip otomatis di Google Drive & siap didisposisikan via Email & WhatsApp.</p>
+              </div>
+              <button onclick="openModalSurat('masuk')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition">+ Catat Surat Masuk</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                  <tr>
+                    <th class="p-3 rounded-l-xl">No. Agenda / Surat</th>
+                    <th class="p-3">Asal & Perihal</th>
+                    <th class="p-3">Tanggal</th>
+                    <th class="p-3">Sifat & Status</th>
+                    <th class="p-3 rounded-r-xl text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="table-masuk-body" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: SURAT KELUAR -->
+        <section id="tab-keluar" class="tab-section hidden space-y-4">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 class="text-lg font-bold text-slate-800">Daftar Surat Keluar & Status TTE</h3>
+                <p class="text-xs text-slate-500">Dokumen yang telah disahkan otomatis mendapat QR Code Verifikasi & tersimpan di Google Drive.</p>
+              </div>
+              <button onclick="openModalSurat('keluar')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition">+ Buat Surat Keluar</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                  <tr>
+                    <th class="p-3 rounded-l-xl">Nomor Surat</th>
+                    <th class="p-3">Tujuan & Perihal</th>
+                    <th class="p-3">Penandatangan</th>
+                    <th class="p-3">Status TTE</th>
+                    <th class="p-3 rounded-r-xl text-right">Dokumen / Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="table-keluar-body" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: DISPOSISI -->
+        <section id="tab-disposisi" class="tab-section hidden space-y-4">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Lembar Kendali Disposisi (Email & WhatsApp)</h3>
+            <p class="text-xs text-slate-500 mb-5">Riwayat disposisi ke jajaran Sekretaris, Kaur, Kasi, dan Kepala Dusun se-Desa Wuliwutik.</p>
+            <div id="list-disposisi-full" class="space-y-3"></div>
+          </div>
+        </section>
+
+        <!-- TAB 5: VERIFIKASI TTE -->
+        <section id="tab-verifikasi" class="tab-section hidden">
+          <div class="max-w-xl mx-auto bg-white rounded-3xl p-7 shadow-sm border border-slate-100 text-center">
+            <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4"><i data-lucide="shield-check" class="w-8 h-8"></i></div>
+            <h3 class="text-xl font-bold text-slate-800">Verifikasi Tanda Tangan Elektronik</h3>
+            <p class="text-xs text-slate-500 mt-1">Masukkan Kode Hash TTE yang tertera di bawah QR Code surat Pemerintah Desa Wuliwutik.</p>
+            <div class="flex gap-2 mt-5">
+              <input type="text" id="input-verify-hash" placeholder="Contoh: A1B2C3D4E5F67890" class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm uppercase font-mono focus:outline-none focus:border-indigo-500">
+              <button onclick="verifyHashManual()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition">Cek</button>
+            </div>
+            <div id="verify-result-box" class="mt-6 text-left hidden"></div>
+          </div>
+        </section>
+
+        <!-- TAB 6: LAPORAN -->
+        <section id="tab-laporan" class="tab-section hidden">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-bold text-slate-800">Rekapitulasi & Laporan Persuratan</h3>
+                <p class="text-xs text-slate-500">Data terhubung langsung dengan Google Spreadsheet utama.</p>
+              </div>
+              <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i> Unduh Rekap CSV
+              </button>
+            </div>
+            <div id="laporan-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"></div>
+          </div>
+        </section>
+
+        <!-- TAB 7: PENGGUNA -->
+        <section id="tab-pengguna" class="tab-section hidden">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Daftar Perangkat Desa & Kepala Dusun Wuliwutik</h3>
+            <div id="list-pengguna" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
+        </section>
+
+        <!-- TAB 8: PENGATURAN & GANTI KATA SANDI -->
+        <section id="tab-pengaturan" class="tab-section hidden space-y-6">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 max-w-2xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Ganti Kata Sandi Akun</h3>
+            <form onsubmit="handleChangePassword(event)" class="space-y-3 text-sm">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Kata Sandi Saat Ini</label>
+                <input type="password" id="current-password" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2">
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Kata Sandi Baru (min. 8 karakter)</label>
+                  <input type="password" id="new-password" minlength="8" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Konfirmasi Kata Sandi Baru</label>
+                  <input type="password" id="confirm-password" minlength="8" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2">
+                </div>
+              </div>
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition">Simpan Kata Sandi Baru</button>
+            </form>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 max-w-2xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Informasi Integrasi Cloud</h3>
+            <div class="space-y-3 text-sm">
+              <div class="p-4 bg-slate-50 rounded-2xl"><span class="text-xs text-slate-400 block">Instansi</span><span class="font-bold text-slate-800">PEMERINTAH DESA WULIUTIK, KECAMATAN NITA</span></div>
+              <div class="p-4 bg-slate-50 rounded-2xl"><span class="text-xs text-slate-400 block">Direktori Google Drive</span><span class="font-mono text-xs text-indigo-600">/Desa_Wuliwutik_Arsip/ (Surat_Masuk, Surat_Keluar, Surat_Tertandatangani)</span></div>
+              <div class="p-4 bg-slate-50 rounded-2xl"><span class="text-xs text-slate-400 block">URL Backend Apps Script</span><span id="cfg-webapp-url" class="font-mono text-xs text-slate-600 break-all">-</span></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH SURAT -->
+  <div id="modal-surat" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 class="font-bold text-lg text-slate-800">Input Surat Baru</h3>
+        <button onclick="closeModal('modal-surat')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl mb-4 text-xs font-bold">
+        <button type="button" id="btn-type-masuk" onclick="setFormSuratType('masuk')" class="py-2 rounded-lg bg-white text-indigo-600 shadow-xs">Surat Masuk</button>
+        <button type="button" id="btn-type-keluar" onclick="setFormSuratType('keluar')" class="py-2 rounded-lg text-slate-500">Surat Keluar (TTE)</button>
+      </div>
+
+      <form id="form-surat-masuk" onsubmit="submitSuratMasuk(event)" class="space-y-3 text-sm">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Surat Asal</label><input type="text" name="noSuratAsal" required placeholder="Contoh: 140/045/KEC-NITA/XI/2026" class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Surat</label><input type="date" name="tglSurat" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Diterima</label><input type="date" name="tglDiterima" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+        </div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Pengirim / Instansi Asal</label><input type="text" name="asalSurat" required placeholder="Contoh: Kantor Camat Nita / Dinas PMD Kab. Sikka" class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Perihal Surat</label><input type="text" name="perihal" required placeholder="Contoh: Undangan Rapat Koordinasi Pemerintahan Desa" class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Sifat Surat</label>
+          <select name="sifat" class="w-full border border-slate-200 rounded-xl px-3.5 py-2">
+            <option value="Biasa">Biasa</option>
+            <option value="Penting">Penting</option>
+            <option value="Rahasia">Rahasia</option>
+          </select>
+        </div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Upload File Scan Surat (PDF/JPG)</label><input type="file" id="file-surat-masuk" accept=".pdf,.jpg,.jpeg,.png" required class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-semibold file:bg-indigo-50 file:text-indigo-600"></div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl mt-2 transition">Simpan ke Google Drive</button>
+      </form>
+
+      <form id="form-surat-keluar" onsubmit="submitSuratKeluar(event)" class="space-y-3 text-sm hidden">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Surat Keluar</label><input type="text" name="noSurat" required placeholder="Contoh: 145/012/DS-WLW/XI/2026" class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Surat</label><input type="date" name="tglSurat" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sifat Surat</label>
+            <select name="sifat" class="w-full border border-slate-200 rounded-xl px-3.5 py-2">
+              <option value="Biasa">Biasa</option>
+              <option value="Penting">Penting</option>
+              <option value="Rahasia">Rahasia</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Tujuan Surat</label><input type="text" name="tujuanSurat" required placeholder="Contoh: Camat Nita / Ketua BPD Desa Wuliwutik" class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Perihal</label><input type="text" name="perihal" required placeholder="Contoh: Pengantar Laporan Realisasi APBDes" class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Pejabat Penandatangan Elektronik (TTE)</label><select name="penandatanganId" id="select-signer" class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></select></div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Upload Draf Dokumen (PDF untuk TTE)</label><input type="file" id="file-surat-keluar" accept="application/pdf" required class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-semibold file:bg-purple-50 file:text-purple-600"></div>
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl mt-2 transition">Ajukan Draf & Minta TTE</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DISPOSISI MULTI-JABATAN (EMAIL & WA) -->
+  <div id="modal-disposisi" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 class="font-bold text-lg text-slate-800">Disposisi Multi-Jabatan (Email & WA)</h3>
+        <button onclick="closeModal('modal-disposisi')" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="submitDisposisi(event)" class="space-y-3 text-sm">
+        <input type="hidden" id="disp-id-surat">
+        <input type="hidden" id="disp-no-surat">
+        <input type="hidden" id="disp-perihal">
+        <div class="p-3 bg-indigo-50 rounded-xl text-xs text-indigo-800 font-medium" id="disp-info-surat"></div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-semibold text-slate-600">Pilih Penerima Disposisi (Bisa Lebih dari Satu)</label>
+            <div class="space-x-2 text-[11px] font-bold">
+              <button type="button" onclick="toggleAllDisposisi(true)" class="text-indigo-600 hover:underline">Pilih Semua</button>
+              <button type="button" onclick="toggleAllDisposisi(false)" class="text-slate-400 hover:underline">Reset</button>
+            </div>
+          </div>
+          <div id="disp-target-checklist" class="max-h-48 overflow-y-auto border border-slate-200 rounded-xl p-2.5 space-y-1.5 bg-slate-50/60"></div>
+          <p id="disp-selected-count" class="text-[11px] text-slate-500 mt-1">0 jabatan dipilih</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Instruksi / Catatan Disposisi</label>
+          <textarea id="disp-instruksi" rows="3" required placeholder="Contoh: Mohon segera ditindaklanjuti dan dikoordinasikan dengan dusun..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Batas Waktu</label>
+          <input type="date" id="disp-deadline" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2">
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl space-y-2 text-xs">
+          <label class="flex items-center gap-2 font-semibold text-slate-700 cursor-pointer">
+            <input type="checkbox" id="disp-send-email" checked class="rounded text-indigo-600">
+            <span>Kirim notifikasi otomatis via Email ke semua jabatan terpilih</span>
+          </label>
+          <label class="flex items-center gap-2 font-semibold text-emerald-700 cursor-pointer">
+            <input type="checkbox" id="disp-open-wa" checked class="rounded text-emerald-600">
+            <span>Siapkan tautan kirim WhatsApp (WA) untuk tiap penerima</span>
+          </label>
+        </div>
+
+        <div id="disp-wa-links-box" class="hidden p-3 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2 text-xs">
+          <div class="font-bold text-emerald-800">Tautan Kirim WhatsApp Siap Digunakan:</div>
+          <div id="disp-wa-links-list" class="space-y-1.5"></div>
+          <button type="button" onclick="selesaiDisposisiDanRefresh()" class="w-full mt-2 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition">Selesai & Perbarui Dashboard</button>
+        </div>
+
+        <button type="submit" id="btn-submit-disposisi" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition">Simpan & Kirim Disposisi</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="hidden-qr-container" class="hidden"></div>
+
+  <script>
+    // GANTI DENGAN URL WEB APP (/exec) GOOGLE APPS SCRIPT ANDA
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/GANTI_DENGAN_DEPLOYMENT_ID_ANDA/exec";
+
+    let APP_STATE = null;
+    let SESSION_TOKEN = sessionStorage.getItem('wuliwutik_session_token') || '';
+    let activityChartInstance = null;
+
+    // Panggilan GET via JSONP agar aman dari blokir CORS di GitHub Pages
+    function callApiGet(action, params = {}) {
+      return new Promise((resolve, reject) => {
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_DEPLOYMENT_ID_ANDA")) {
+          reject(new Error("URL Google Apps Script belum diatur di index.html."));
+          return;
+        }
+        const cbName = "cb_wuliwutik_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+        const script = document.createElement("script");
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("Waktu koneksi ke server Google Apps Script habis."));
+        }, 25000);
+
+        function cleanup() {
+          clearTimeout(timeout);
+          if (script.parentNode) script.parentNode.removeChild(script);
+          try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+        }
+
+        window[cbName] = function(data) {
+          cleanup();
+          if (data && data.error) {
+            reject(new Error(data.message || "Terjadi kesalahan pada server."));
+          } else {
+            resolve(data);
+          }
+        };
+
+        const query = new URLSearchParams({ action: action, callback: cbName });
+        Object.keys(params).forEach(k => {
+          if (params[k] !== undefined && params[k] !== null) {
+            query.append(k, String(params[k]));
+          }
+        });
+
+        script.src = `${APPS_SCRIPT_URL}?${query.toString()}`;
+        script.onerror = function() {
+          cleanup();
+          reject(new Error("Gagal memuat respons dari Google Apps Script."));
+        };
+        document.body.appendChild(script);
+      });
+    }
+
+    // Panggilan POST via fetch (text/plain) untuk payload besar seperti file PDF/Base64
+    async function callApiPost(action, payload = {}) {
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_DEPLOYMENT_ID_ANDA")) {
+        throw new Error("URL Google Apps Script belum diatur di index.html.");
+      }
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: action, ...payload })
+      });
+      if (!res.ok) {
+        throw new Error("Gagal menghubungi server (" + res.status + ")");
+      }
+      const data = await res.json();
+      if (data && data.error) {
+        throw new Error(data.message || "Terjadi kesalahan pada server.");
+      }
+      return data;
+    }
+
+    window.onload = function() {
+      lucide.createIcons();
+      initLoginScreen();
+    };
+
+    function showLoader(text = "Memproses data...") {
+      document.getElementById('loader-text').innerText = text;
+      const el = document.getElementById('loader');
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loader');
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    async function initLoginScreen() {
+      showLoader("Menyiapkan halaman login...");
+      try {
+        const options = await callApiGet("getLoginOptions");
+        const select = document.getElementById('login-jabatan');
+        select.innerHTML = `<option value="">-- Pilih Jabatan --</option>` + options.map(o =>
+          `<option value="${o.Jabatan}">${o.Jabatan} — ${o.Nama_Lengkap}</option>`
+        ).join('');
+        hideLoader();
+
+        if (SESSION_TOKEN) {
+          enterApp();
+        }
+      } catch (err) {
+        hideLoader();
+        const errEl = document.getElementById('login-error');
+        errEl.innerText = err.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('login-error');
+      errEl.classList.add('hidden');
+
+      const jabatanVal = document.getElementById('login-jabatan').value;
+      const identVal = document.getElementById('login-identifier').value.trim();
+      const pwVal = document.getElementById('login-password').value;
+
+      const identifier = identVal || jabatanVal;
+      if (!identifier) {
+        errEl.innerText = "Pilih jabatan atau masukkan email akun terlebih dahulu.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      showLoader("Memverifikasi kata sandi...");
+      try {
+        const res = await callApiGet("authenticateWithPassword", {
+          identifier: identifier,
+          password: pwVal
+        });
+        hideLoader();
+        if (!res.success) {
+          errEl.innerText = res.message;
+          errEl.classList.remove('hidden');
+          return;
+        }
+        SESSION_TOKEN = res.sessionToken;
+        sessionStorage.setItem('wuliwutik_session_token', SESSION_TOKEN);
+        document.getElementById('login-password').value = '';
+        enterApp();
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    function enterApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-shell').classList.remove('hidden');
+      loadAppData();
+    }
+
+    function logoutUser() {
+      SESSION_TOKEN = '';
+      sessionStorage.removeItem('wuliwutik_session_token');
+      APP_STATE = null;
+      document.getElementById('app-shell').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-password').value = '';
+    }
+
+    function handleBackendError(err) {
+      hideLoader();
+      const msg = err && err.message ? err.message : "Terjadi kesalahan sistem.";
+      if (msg.toLowerCase().includes("sesi login")) {
+        alert(msg);
+        logoutUser();
+        return;
+      }
+      alert("Terjadi kesalahan: " + msg);
+    }
+
+    async function loadAppData() {
+      if (!SESSION_TOKEN) {
+        logoutUser();
+        return;
+      }
+      showLoader("Menyinkronkan data dari Google Drive & Sheets...");
+      try {
+        const data = await callApiGet("getInitialAppData", { sessionToken: SESSION_TOKEN });
+        APP_STATE = data;
+        renderAllUI();
+        hideLoader();
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      const curPw = document.getElementById('current-password').value;
+      const newPw = document.getElementById('new-password').value;
+      const confPw = document.getElementById('confirm-password').value;
+
+      if (newPw !== confPw) {
+        alert("Konfirmasi kata sandi baru tidak cocok.");
+        return;
+      }
+
+      showLoader("Menyimpan kata sandi baru...");
+      try {
+        const res = await callApiGet("changePassword", {
+          sessionToken: SESSION_TOKEN,
+          currentPassword: curPw,
+          newPassword: newPw
+        });
+        hideLoader();
+        alert(res.message);
+        if (res.success) {
+          document.getElementById('current-password').value = '';
+          document.getElementById('new-password').value = '';
+          document.getElementById('confirm-password').value = '';
+        }
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    function renderAllUI() {
+      const { activeUser, kpi, suratMasuk, suratKeluar, disposisi, tugasSaya, chartData, pengguna, webAppUrl } = APP_STATE;
+
+      const jam = new Date().getHours();
+      let waktu = jam < 11 ? "pagi" : jam < 15 ? "siang" : jam < 18 ? "sore" : "malam";
+      document.getElementById('greeting-text').innerText = `Selamat ${waktu}, ${activeUser.Jabatan}!`;
+      document.getElementById('greeting-sub').innerHTML = `${activeUser.Nama_Lengkap} • <strong class="text-slate-700">${kpi.suratMasukBaru} surat masuk baru</strong> & <strong class="text-slate-700">${kpi.disposisiMenunggu} tugas menunggu</strong>.`;
+      document.getElementById('user-avatar').innerText = activeUser.Jabatan.charAt(0).toUpperCase();
+
+      document.getElementById('kpi-masuk').innerText = kpi.totalMasuk;
+      document.getElementById('kpi-keluar').innerText = kpi.totalKeluar;
+      document.getElementById('kpi-belum').innerText = kpi.belumDiproses;
+      document.getElementById('kpi-bulan').innerText = kpi.suratBulanIni;
+      document.getElementById('badge-masuk').innerText = kpi.suratMasukBaru;
+      document.getElementById('cfg-webapp-url').innerText = webAppUrl || APPS_SCRIPT_URL;
+
+      let combined = [
+        ...suratMasuk.map(s => ({ ...s, jenis: 'Masuk', nomor: s.No_Surat_Asal, pihak: 'Dari: ' + s.Asal_Surat, tanggal: s.Tgl_Diterima || s.Tgl_Surat })),
+        ...suratKeluar.map(s => ({ ...s, jenis: 'Keluar', nomor: s.No_Surat, pihak: 'Kepada: ' + s.Tujuan_Surat, tanggal: s.Tgl_Surat }))
+      ].slice(0, 5);
+
+      const recentContainer = document.getElementById('recent-letters-list');
+      if (combined.length === 0) {
+        recentContainer.innerHTML = `<div class="bg-white rounded-3xl p-8 text-center text-sm text-slate-400">Belum ada arsip surat. Klik tombol <strong>+ Surat</strong> untuk memulai.</div>`;
+      } else {
+        recentContainer.innerHTML = combined.map(item => {
+          const isMasuk = item.jenis === 'Masuk';
+          const iconBg = isMasuk ? 'bg-blue-500' : 'bg-rose-500';
+          const iconName = isMasuk ? 'inbox' : 'send';
+          const sifatBadge = item.Sifat === 'Penting' ? 'bg-amber-100 text-amber-700' : item.Sifat === 'Rahasia' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600';
+          const statusBadge = item.Status === 'Baru' ? 'bg-sky-100 text-sky-700' : item.Status === 'Diproses' || item.Status === 'Menunggu TTE' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700';
+
+          return `
+            <div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3 hover:shadow-md transition">
+              <div class="flex items-center gap-3.5 min-w-0">
+                <div class="w-11 h-11 rounded-2xl ${iconBg} text-white flex items-center justify-center shrink-0 shadow-sm"><i data-lucide="${iconName}" class="w-5 h-5"></i></div>
+                <div class="min-w-0">
+                  <h4 class="font-bold text-sm text-slate-800 truncate">${item.Perihal}</h4>
+                  <p class="text-xs text-slate-500 truncate mt-0.5">${item.pihak} • ${item.tanggal}</p>
+                  <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 truncate">
+                    <span>${item.nomor}</span>
+                    ${item.File_URL ? `<span>•</span><a href="${item.File_URL}" target="_blank" class="text-indigo-600 hover:underline flex items-center gap-1 truncate"><i data-lucide="paperclip" class="w-3 h-3"></i>${item.File_Name || 'Lampiran.pdf'}</a>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold ${sifatBadge}">${item.Sifat}</span>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusBadge}">${item.Status}</span>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      const tasksContainer = document.getElementById('my-tasks-container');
+      if (tugasSaya.length === 0) {
+        tasksContainer.innerHTML = `<p class="text-center text-sm text-slate-500 py-4">Tidak ada tugas. 🎉</p>`;
+      } else {
+        tasksContainer.innerHTML = `<div class="space-y-3">` + tugasSaya.map(t => `
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${t.tipe === 'TTE' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${t.tipe === 'TTE' ? 'Otorisasi TTE' : 'Disposisi'}</span>
+              <span class="text-[11px] text-slate-400">${t.noSurat}</span>
+            </div>
+            <p class="font-bold text-xs text-slate-800 mt-1.5">${t.judul}</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">${t.keterangan}</p>
+            ${t.tipe === 'TTE'
+              ? `<button onclick="prosesTandaTanganElektronik('${t.idSurat}')" class="mt-2.5 w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 rounded-xl transition flex items-center justify-center gap-1.5"><i data-lucide="pen-tool" class="w-3.5 h-3.5"></i> Setujui & Tanda Tangani (QR)</button>`
+              : `<div class="flex gap-2 mt-2.5">
+                   <button onclick="selesaikanTugasDisposisi('${t.id}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 rounded-xl transition">Tandai Selesai</button>
+                   ${t.waLink ? `<a href="${t.waLink}" target="_blank" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition">WA</a>` : ''}
+                 </div>`
+            }
+          </div>
+        `).join('') + `</div>`;
+      }
+
+      renderActivityChart(chartData);
+
+      document.getElementById('table-masuk-body').innerHTML = suratMasuk.map(s => `
+        <tr class="hover:bg-slate-50/80">
+          <td class="p-3"><div class="font-bold text-slate-800">${s.No_Agenda}</div><div class="text-xs text-slate-400">${s.No_Surat_Asal}</div></td>
+          <td class="p-3"><div class="font-semibold text-slate-800">${s.Asal_Surat}</div><div class="text-xs text-slate-500">${s.Perihal}</div></td>
+          <td class="p-3 text-xs text-slate-600">${s.Tgl_Diterima}</td>
+          <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${s.Sifat} • ${s.Status}</span></td>
+          <td class="p-3 text-right space-x-2">
+            ${s.File_URL ? `<a href="${s.File_URL}" target="_blank" class="inline-block px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Lihat File</a>` : ''}
+            <button onclick="openDisposisiModal('${s.ID_Surat}', '${s.No_Surat_Asal}', '${s.Perihal}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-semibold">Disposisi</button>
+          </td>
+        </tr>`).join('');
+
+      document.getElementById('table-keluar-body').innerHTML = suratKeluar.map(s => `
+        <tr class="hover:bg-slate-50/80">
+          <td class="p-3 font-bold text-slate-800">${s.No_Surat}</td>
+          <td class="p-3"><div class="font-semibold text-slate-800">${s.Tujuan_Surat}</div><div class="text-xs text-slate-500">${s.Perihal}</div></td>
+          <td class="p-3 text-xs"><div class="font-semibold text-slate-700">${s.Penandatangan_Nama}</div><div class="text-slate-400">${s.Penandatangan_Jabatan}</div></td>
+          <td class="p-3">
+            ${s.Status === 'Terkirim'
+              ? `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Sah (TTE: ${s.Hash_TTE})</span>`
+              : `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Menunggu TTE</span>`}
+          </td>
+          <td class="p-3 text-right space-x-2">
+            ${s.File_URL ? `<a href="${s.File_URL}" target="_blank" class="inline-block px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">PDF Drive</a>` : ''}
+            ${s.Status === 'Menunggu TTE' ? `<button onclick="prosesTandaTanganElektronik('${s.ID_Surat}')" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-semibold">Tanda Tangani</button>` : ''}
+          </td>
+        </tr>`).join('');
+
+      document.getElementById('list-disposisi-full').innerHTML = disposisi.length === 0
+        ? `<p class="text-sm text-slate-400">Belum ada riwayat disposisi.</p>`
+        : disposisi.map(d => `
+          <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="text-xs text-indigo-600 font-bold">${d.No_Surat} • Kepada: ${d.Kepada_Jabatan || ''} (${d.Kepada_Nama})</div>
+              <div class="font-bold text-sm text-slate-800">${d.Perihal}</div>
+              <div class="text-xs text-slate-600">Instruksi: "${d.Instruksi}" (Batas: ${d.Batas_Waktu})</div>
+              <div class="text-[11px] text-slate-400">Email: ${d.Email_Status || '-'} • WA: ${d.Kepada_WA || '-'}</div>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-center">
+              ${d.WA_Link ? `<a href="${d.WA_Link}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">Kirim WA</a>` : ''}
+              <span class="px-3 py-1 rounded-full text-xs font-bold ${d.Status_Disposisi === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${d.Status_Disposisi}</span>
+            </div>
+          </div>`).join('');
+
+      document.getElementById('list-pengguna').innerHTML = pengguna.map(u => `
+        <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50">
+          <div class="font-bold text-indigo-700 text-sm">${u.Jabatan}</div>
+          <div class="text-xs font-semibold text-slate-800 mt-0.5">${u.Nama_Lengkap}</div>
+          <div class="text-[11px] text-slate-500 mt-1">${u.Email_Username || '-'} • ${u.No_WA || '-'}</div>
+        </div>`).join('');
+
+      document.getElementById('select-signer').innerHTML = pengguna
+        .filter(u => u.Role === 'Pimpinan' || u.Role === 'Admin')
+        .map(u => `<option value="${u.User_ID}">${u.Jabatan} — ${u.Nama_Lengkap}</option>`).join('');
+
+      const penerimaList = pengguna.filter(u => u.User_ID !== 'USR-00');
+      document.getElementById('disp-target-checklist').innerHTML = penerimaList.map(u => `
+        <label class="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 cursor-pointer transition">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <input type="checkbox" name="dispTargetCb" value="${u.User_ID}" data-jabatan="${u.Jabatan}" data-nama="${u.Nama_Lengkap}" onchange="updateDisposisiCount()" class="rounded text-indigo-600 focus:ring-indigo-500">
+            <div class="truncate">
+              <span class="font-bold text-xs text-slate-800">${u.Jabatan}</span>
+              <span class="text-[11px] text-slate-500"> — ${u.Nama_Lengkap}</span>
+            </div>
+          </div>
+          <span class="text-[10px] text-slate-400 shrink-0">${u.No_WA ? 'WA' : ''}</span>
+        </label>
+      `).join('');
+      updateDisposisiCount();
+
+      document.getElementById('laporan-summary').innerHTML = `
+        <div class="p-4 rounded-2xl bg-slate-50"><div class="text-xs text-slate-500">Total Surat Masuk</div><div class="text-2xl font-extrabold text-slate-800 mt-1">${kpi.totalMasuk}</div></div>
+        <div class="p-4 rounded-2xl bg-slate-50"><div class="text-xs text-slate-500">Total Surat Keluar</div><div class="text-2xl font-extrabold text-slate-800 mt-1">${kpi.totalKeluar}</div></div>
+        <div class="p-4 rounded-2xl bg-slate-50"><div class="text-xs text-slate-500">Tersertifikasi TTE</div><div class="text-2xl font-extrabold text-emerald-600 mt-1">${suratKeluar.filter(s => s.Status === 'Terkirim').length}</div></div>`;
+
+      lucide.createIcons();
+    }
+
+    function renderActivityChart(chartData) {
+      const ctx = document.getElementById('activityChart').getContext('2d');
+      if (activityChartInstance) activityChartInstance.destroy();
+      activityChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartData.labels,
+          datasets: [
+            { label: 'Masuk', data: chartData.masukCounts, backgroundColor: '#1E1E2D', borderRadius: 6, barPercentage: 0.65 },
+            { label: 'Keluar', data: chartData.keluarCounts, backgroundColor: '#F45B7A', borderRadius: 6, barPercentage: 0.65 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { grid: { display: false }, border: { display: false } }, y: { display: false, beginAtZero: true } }
+        }
+      });
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-slate-800', 'font-semibold', 'shadow-sm');
+        btn.classList.add('text-white/90');
+      });
+      const activeBtn = document.getElementById('nav-' + tabName);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-white', 'text-slate-800', 'font-semibold', 'shadow-sm');
+        activeBtn.classList.remove('text-white/90');
+      }
+      if (window.innerWidth < 768) toggleSidebar();
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    }
+
+    function openModalSurat(defaultType = 'masuk') {
+      const el = document.getElementById('modal-surat');
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+      setFormSuratType(defaultType);
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+
+    function setFormSuratType(type) {
+      if (type === 'masuk') {
+        document.getElementById('form-surat-masuk').classList.remove('hidden');
+        document.getElementById('form-surat-keluar').classList.add('hidden');
+        document.getElementById('btn-type-masuk').className = 'py-2 rounded-lg bg-white text-indigo-600 shadow-xs';
+        document.getElementById('btn-type-keluar').className = 'py-2 rounded-lg text-slate-500';
+      } else {
+        document.getElementById('form-surat-masuk').classList.add('hidden');
+        document.getElementById('form-surat-keluar').classList.remove('hidden');
+        document.getElementById('btn-type-keluar').className = 'py-2 rounded-lg bg-white text-purple-600 shadow-xs';
+        document.getElementById('btn-type-masuk').className = 'py-2 rounded-lg text-slate-500';
+      }
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function submitSuratMasuk(e) {
+      e.preventDefault();
+      const form = e.target;
+      const file = document.getElementById('file-surat-masuk').files[0];
+      showLoader("Mengunggah arsip Surat Masuk ke Google Drive...");
+      try {
+        const base64 = file ? await fileToBase64(file) : null;
+        await callApiPost("saveSuratMasuk", {
+          sessionToken: SESSION_TOKEN,
+          payload: {
+            noSuratAsal: form.noSuratAsal.value,
+            tglSurat: form.tglSurat.value,
+            tglDiterima: form.tglDiterima.value,
+            asalSurat: form.asalSurat.value,
+            perihal: form.perihal.value,
+            sifat: form.sifat.value,
+            fileName: file ? file.name : '',
+            fileMime: file ? file.type : '',
+            fileBase64: base64,
+            createdBy: `${APP_STATE.activeUser.Jabatan} (${APP_STATE.activeUser.Nama_Lengkap})`
+          }
+        });
+        form.reset();
+        closeModal('modal-surat');
+        loadAppData();
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    async function submitSuratKeluar(e) {
+      e.preventDefault();
+      const form = e.target;
+      const file = document.getElementById('file-surat-keluar').files[0];
+      showLoader("Menyimpan draf surat ke Google Drive...");
+      try {
+        const base64 = await fileToBase64(file);
+        await callApiPost("saveSuratKeluar", {
+          sessionToken: SESSION_TOKEN,
+          payload: {
+            noSurat: form.noSurat.value,
+            tglSurat: form.tglSurat.value,
+            tujuanSurat: form.tujuanSurat.value,
+            perihal: form.perihal.value,
+            sifat: form.sifat.value,
+            penandatanganId: form.penandatanganId.value,
+            fileName: file.name,
+            fileBase64: base64,
+            createdBy: `${APP_STATE.activeUser.Jabatan} (${APP_STATE.activeUser.Nama_Lengkap})`
+          }
+        });
+        form.reset();
+        closeModal('modal-surat');
+        loadAppData();
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    async function prosesTandaTanganElektronik(idSurat) {
+      const surat = APP_STATE.suratKeluar.find(s => s.ID_Surat === idSurat);
+      if (!surat) return;
+      if (!confirm(`Sahkan & bubuhkan QR Code Tanda Tangan Elektronik pada surat "${surat.Perihal}" (${surat.No_Surat})?`)) return;
+
+      showLoader("Membubuhkan QR Tanda Tangan Elektronik ke PDF...");
+      try {
+        const pdfBase64 = await callApiGet("getPdfBase64ByFileId", {
+          sessionToken: SESSION_TOKEN,
+          fileId: surat.Drive_File_ID
+        });
+
+        const baseVerifyUrl = APP_STATE.webAppUrl || APPS_SCRIPT_URL;
+        const verifyUrl = `${baseVerifyUrl}?verify=${surat.Hash_TTE}`;
+        const qrContainer = document.getElementById('hidden-qr-container');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, { text: verifyUrl, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.H });
+        await new Promise(r => setTimeout(r, 300));
+
+        const qrDataUrl = qrContainer.querySelector('canvas').toDataURL('image/png');
+        const pdfBytes = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
+        const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+        const qrImage = await pdfDoc.embedPng(qrDataUrl);
+        const pages = pdfDoc.getPages();
+        const lastPage = pages[pages.length - 1];
+        const { width } = lastPage.getSize();
+
+        const qrSize = 68;
+        const fontSize = 7;
+        const qrX = (width - qrSize) / 2;
+        const qrY = 56;
+
+        lastPage.drawImage(qrImage, { x: qrX, y: qrY, width: qrSize, height: qrSize });
+
+        const label1 = "TTE Sah Desa Wuliwutik";
+        const label2 = `ID: ${surat.Hash_TTE}`;
+        const text1Width = label1.length * (fontSize * 0.48);
+        const text2Width = label2.length * (fontSize * 0.48);
+
+        lastPage.drawText(label1, { x: (width - text1Width) / 2, y: qrY - 11, size: fontSize });
+        lastPage.drawText(label2, { x: (width - text2Width) / 2, y: qrY - 21, size: fontSize });
+
+        const signedPdfBase64 = await pdfDoc.saveAsBase64({ dataUri: true });
+        const res = await callApiPost("finalizeTTE", {
+          sessionToken: SESSION_TOKEN,
+          payload: { idSurat: idSurat, signedPdfBase64: signedPdfBase64 }
+        });
+        alert(`Berhasil! Dokumen disahkan (Hash: ${res.hashTTE}) dan tersimpan di Google Drive.`);
+        loadAppData();
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    function openDisposisiModal(idSurat, noSurat, perihal) {
+      document.getElementById('disp-id-surat').value = idSurat;
+      document.getElementById('disp-no-surat').value = noSurat;
+      document.getElementById('disp-perihal').value = perihal;
+      document.getElementById('disp-info-surat').innerText = `${noSurat} — ${perihal}`;
+      document.getElementById('disp-wa-links-box').classList.add('hidden');
+      document.getElementById('disp-wa-links-list').innerHTML = '';
+      document.getElementById('btn-submit-disposisi').classList.remove('hidden');
+      toggleAllDisposisi(false);
+
+      const el = document.getElementById('modal-disposisi');
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+
+    function toggleAllDisposisi(checked) {
+      document.querySelectorAll('input[name="dispTargetCb"]').forEach(cb => cb.checked = checked);
+      updateDisposisiCount();
+    }
+
+    function updateDisposisiCount() {
+      const checkedCount = document.querySelectorAll('input[name="dispTargetCb"]:checked').length;
+      document.getElementById('disp-selected-count').innerText = `${checkedCount} jabatan dipilih`;
+    }
+
+    async function submitDisposisi(e) {
+      e.preventDefault();
+      const checkedBoxes = Array.from(document.querySelectorAll('input[name="dispTargetCb"]:checked'));
+      if (checkedBoxes.length === 0) {
+        alert("Silakan pilih minimal satu jabatan penerima disposisi.");
+        return;
+      }
+
+      const targetIds = checkedBoxes.map(cb => cb.value);
+      const sendEmail = document.getElementById('disp-send-email').checked;
+      const openWA = document.getElementById('disp-open-wa').checked;
+
+      showLoader(`Menyimpan disposisi ke ${targetIds.length} jabatan & mengirim Email...`);
+      try {
+        const res = await callApiPost("saveDisposisiMultiple", {
+          sessionToken: SESSION_TOKEN,
+          payload: {
+            idSurat: document.getElementById('disp-id-surat').value,
+            noSurat: document.getElementById('disp-no-surat').value,
+            perihal: document.getElementById('disp-perihal').value,
+            dariUser: `${APP_STATE.activeUser.Jabatan} (${APP_STATE.activeUser.Nama_Lengkap})`,
+            kepadaUserIds: targetIds,
+            instruksi: document.getElementById('disp-instruksi').value,
+            batasWaktu: document.getElementById('disp-deadline').value,
+            kirimEmail: sendEmail
+          }
+        });
+        hideLoader();
+
+        if (!res.success) {
+          alert(res.message || "Gagal menyimpan disposisi.");
+          return;
+        }
+
+        if (openWA && Array.isArray(res.results) && res.results.length > 0) {
+          const linksHtml = res.results.map(r => {
+            const box = checkedBoxes.find(cb => cb.value === r.userId);
+            const label = box ? `${box.dataset.jabatan} (${box.dataset.nama})` : r.userId;
+            return `
+              <div class="flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-emerald-200">
+                <div class="truncate">
+                  <div class="font-semibold text-slate-800 truncate">${label}</div>
+                  <div class="text-[10px] text-slate-500">${r.emailStatus}</div>
+                </div>
+                <a href="${r.waLink}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shrink-0">Kirim WA</a>
+              </div>`;
+          }).join('');
+
+          document.getElementById('disp-wa-links-list').innerHTML = linksHtml;
+          document.getElementById('disp-wa-links-box').classList.remove('hidden');
+          document.getElementById('btn-submit-disposisi').classList.add('hidden');
+        } else {
+          alert(`${res.message} Notifikasi email telah diproses.`);
+          selesaiDisposisiDanRefresh();
+        }
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    function selesaiDisposisiDanRefresh() {
+      document.getElementById('disp-instruksi').value = '';
+      closeModal('modal-disposisi');
+      loadAppData();
+    }
+
+    async function selesaikanTugasDisposisi(idDisp) {
+      const catatan = prompt("Masukkan catatan tindak lanjut disposisi:", "Sudah ditindaklanjuti sesuai arahan.");
+      if (catatan === null) return;
+      showLoader("Memperbarui status disposisi...");
+      try {
+        await callApiGet("selesaikanDisposisi", {
+          sessionToken: SESSION_TOKEN,
+          idDisposisi: idDisp,
+          catatan: catatan
+        });
+        loadAppData();
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    async function verifyHashManual() {
+      const hash = document.getElementById('input-verify-hash').value;
+      if (!hash) return;
+      showLoader("Memeriksa keaslian dokumen...");
+      try {
+        const doc = await callApiGet("checkVerificationHash", { hash: hash });
+        hideLoader();
+        const box = document.getElementById('verify-result-box');
+        box.classList.remove('hidden');
+        if (doc) {
+          box.innerHTML = `
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm">
+              <div class="font-bold text-emerald-700 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> DOKUMEN SAH & TERVERIFIKASI</div>
+              <p class="mt-2 text-slate-700"><strong>Nomor:</strong> ${doc.No_Surat}</p>
+              <p class="text-slate-700"><strong>Perihal:</strong> ${doc.Perihal}</p>
+              <p class="text-slate-700"><strong>Penandatangan:</strong> ${doc.Penandatangan_Nama} (${doc.Penandatangan_Jabatan})</p>
+              <p class="text-slate-500 text-xs mt-1">Disahkan pada: ${doc.Waktu_Sah}</p>
+              <a href="${doc.File_URL_Sah}" target="_blank" class="mt-3 inline-block text-xs font-bold text-indigo-600 underline">Buka Salinan Asli di Google Drive →</a>
+            </div>`;
+        } else {
+          box.innerHTML = `<div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-sm text-rose-700 font-semibold">Kode Hash TTE tidak ditemukan dalam arsip Pemerintah Desa Wuliwutik.</div>`;
+        }
+        lucide.createIcons();
+      } catch (err) {
+        handleBackendError(err);
+      }
+    }
+
+    function exportCSV() {
+      let csv = "Jenis,Nomor Surat,Tanggal,Asal/Tujuan,Perihal,Sifat,Status\n";
+      APP_STATE.suratMasuk.forEach(s => csv += `Masuk,"${s.No_Surat_Asal}","${s.Tgl_Diterima}","${s.Asal_Surat}","${s.Perihal}","${s.Sifat}","${s.Status}"\n`);
+      APP_STATE.suratKeluar.forEach(s => csv += `Keluar,"${s.No_Surat}","${s.Tgl_Surat}","${s.Tujuan_Surat}","${s.Perihal}","${s.Sifat}","${s.Status}"\n`);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Rekap_Surat_Desa_Wuliwutik_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
