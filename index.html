@@ -494,7 +494,7 @@
 
   <script>
     // GANTI DENGAN URL WEB APP (/exec) GOOGLE APPS SCRIPT ANDA
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-DDtx5ooDjZxmw98tMse3WS7zQNBr7JfVC_YTmaHKEWWXvOXo9eYUhYrT7JU0iEklrg/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/GANTI_DENGAN_DEPLOYMENT_ID_ANDA/exec";
 
     let APP_STATE = null;
     let SESSION_TOKEN = sessionStorage.getItem('wuliwutik_session_token') || '';
@@ -503,7 +503,7 @@
     // Panggilan GET via JSONP agar aman dari blokir CORS di GitHub Pages
     function callApiGet(action, params = {}) {
       return new Promise((resolve, reject) => {
-        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("AKfycbz-DDtx5ooDjZxmw98tMse3WS7zQNBr7JfVC_YTmaHKEWWXvOXo9eYUhYrT7JU0iEklrg")) {
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_DEPLOYMENT_ID_ANDA")) {
           reject(new Error("URL Google Apps Script belum diatur di index.html."));
           return;
         }
@@ -547,7 +547,7 @@
 
     // Panggilan POST via fetch (text/plain) untuk payload besar seperti file PDF/Base64
     async function callApiPost(action, payload = {}) {
-      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("AKfycbz-DDtx5ooDjZxmw98tMse3WS7zQNBr7JfVC_YTmaHKEWWXvOXo9eYUhYrT7JU0iEklrg")) {
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN_DEPLOYMENT_ID_ANDA")) {
         throw new Error("URL Google Apps Script belum diatur di index.html.");
       }
       const res = await fetch(APPS_SCRIPT_URL, {
